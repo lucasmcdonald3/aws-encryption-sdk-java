@@ -1,0 +1,26 @@
+name: AWS CodeBuild CI
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 3600 # TODO change to 7200 after modifying existing max session duration
+      - name: Run build
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          # Must be kept in sync with cfn/ci_cd.yml PROJECT_NAME parameter
+          project-name: java-esdk-ci

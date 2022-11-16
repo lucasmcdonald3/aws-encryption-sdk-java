@@ -48,12 +48,6 @@ Resources:
         InsecureSsl: false
         ReportBuildStatus: false
         Type: GITHUB
-      Triggers:
-        BuildType: BUILD_BATCH
-        Webhook: true
-        FilterGroups:
-          - - Type: EVENT
-              Pattern: PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_REOPENED
       Artifacts:
         Type: NO_ARTIFACTS
       Cache:
