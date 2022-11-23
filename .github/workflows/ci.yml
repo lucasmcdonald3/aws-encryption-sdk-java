@@ -34,15 +34,14 @@ jobs:
     name: Vector Tests
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: true
       matrix:
-        distribution: [ openjdk, corretto ]
-        version: [ 8, 11 ]
-        image: [ "aws/codebuild/standard:3.0", "aws/codebuild/amazonlinux2-x86_64-standard:3.0" ]
-        exclude:
-          - distribution: corretto
-            image: aws/codebuild/standard:3.0 # Corretto only runs on AL2
+        platform:
           - distribution: openjdk
-            image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+            image: "aws/codebuild/standard:3.0"
+          - distribution: corretto
+            image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0" # Corretto only runs on AL2
+        version: [ 8, 11 ]
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -50,17 +49,17 @@ jobs:
           role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
           aws-region: us-west-2
           role-duration-seconds: 3600
-      - name: Vector Tests ${{ matrix.distribution }}${{ matrix.version }}
+      - name: Vector Tests ${{ matrix.platform.distribution }}${{ matrix.version }}
         uses: aws-actions/aws-codebuild-run-build@v1
         timeout-minutes: 60
         with:
           project-name: $PROJECT_NAME
           buildspec-override: codebuild/ci/vectors-ci.yml
           compute-type-override: BUILD_GENERAL1_LARGE
-          image-override: ${{ matrix.image }}
+          image-override: ${{ matrix.platform.image }}
           env-vars-for-codebuild: JAVA_ENV_VERSION
         env:
-          JAVA_ENV_VERSION: ${{ matrix.distribution }}${{ matrix.version }}
+          JAVA_ENV_VERSION: ${{ matrix.platform.distribution }}${{ matrix.version }}
   releaseCI:
     name: Release CI
     runs-on: ubuntu-latest
@@ -84,15 +83,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: releaseCI
     strategy:
+      fail-fast: true
       matrix:
-        distribution: [ openjdk, corretto ]
-        version: [ 8, 11 ]
-        image: [ "aws/codebuild/standard:3.0", "aws/codebuild/amazonlinux2-x86_64-standard:3.0" ]
-        exclude:
-          - distribution: corretto
-            image: aws/codebuild/standard:3.0 # Corretto only runs on AL2
+        platform:
           - distribution: openjdk
-            image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+            image: "aws/codebuild/standard:3.0"
+          - distribution: corretto
+            image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0" # Corretto only runs on AL2
+        version: [ 8, 11 ]
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -100,17 +98,17 @@ jobs:
           role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
           aws-region: us-west-2
           role-duration-seconds: 3600
-      - name: Validate CI ${{ matrix.distribution }}${{ matrix.version }}
+      - name: Validate CI ${{ matrix.platform.distribution }}${{ matrix.version }}
         uses: aws-actions/aws-codebuild-run-build@v1
         timeout-minutes: 60
         with:
           project-name: $PROJECT_NAME
           buildspec-override: codebuild/ci/validate-ci.yml
           compute-type-override: BUILD_GENERAL1_MEDIUM
-          image-override: ${{ matrix.image }}
+          image-override: ${{ matrix.platform.image }}
           env-vars-for-codebuild: |
             JAVA_ENV_VERSION,
             JAVA_NUMERIC_VERSION
         env:
-          JAVA_ENV_VERSION: ${{ matrix.distribution }}${{ matrix.version }}
+          JAVA_ENV_VERSION: ${{ matrix.platform.distribution }}${{ matrix.version }}
           JAVA_NUMERIC_VERSION: ${{ matrix.version }}
