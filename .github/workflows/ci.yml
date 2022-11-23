@@ -5,9 +5,6 @@ on:
   schedule:
     - cron: "0 0 * * *" # Daily at 00:00 UTC (4 PM PDT)
 
-env:
-  CODEBUILD_PROJECT_NAME: AWS-ESDK-Java-CI
-
 permissions:
   id-token: write
   contents: read
@@ -27,7 +24,7 @@ jobs:
         uses: aws-actions/aws-codebuild-run-build@v1
         timeout-minutes: 60
         with:
-          project-name: $CODEBUILD_PROJECT_NAME
+          project-name: AWS-ESDK-Java-CI
           buildspec-override: codebuild/ci/static-analysis.yml
           compute-type-override: BUILD_GENERAL1_MEDIUM
           image-override: aws/codebuild/amazonlinux2-x86_64-standard:3.0
@@ -54,7 +51,7 @@ jobs:
         uses: aws-actions/aws-codebuild-run-build@v1
         timeout-minutes: 60
         with:
-          project-name: $CODEBUILD_PROJECT_NAME
+          project-name: AWS-ESDK-Java-CI
           buildspec-override: codebuild/ci/vectors-ci.yml
           compute-type-override: BUILD_GENERAL1_LARGE
           image-override: ${{ matrix.platform.image }}
@@ -75,7 +72,7 @@ jobs:
         uses: aws-actions/aws-codebuild-run-build@v1
         timeout-minutes: 60
         with:
-          project-name: $CODEBUILD_PROJECT_NAME
+          project-name: AWS-ESDK-Java-CI
           buildspec-override: codebuild/ci/release-ci.yml
           compute-type-override: BUILD_GENERAL1_LARGE
           image-override: aws/codebuild/standard:3.0
@@ -103,7 +100,7 @@ jobs:
         uses: aws-actions/aws-codebuild-run-build@v1
         timeout-minutes: 60
         with:
-          project-name: $CODEBUILD_PROJECT_NAME
+          project-name: AWS-ESDK-Java-CI
           buildspec-override: codebuild/ci/validate-ci.yml
           compute-type-override: BUILD_GENERAL1_MEDIUM
           image-override: ${{ matrix.platform.image }}
