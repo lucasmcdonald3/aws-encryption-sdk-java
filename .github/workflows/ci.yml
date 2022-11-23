@@ -1,0 +1,115 @@
+name: AWS CodeBuild CI
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: "0 0 * * *" # Daily at 00:00 UTC (4 PM PDT)
+
+env:
+  PROJECT_NAME: AWS-ESDK-Java-CI
+
+permissions:
+  id-token: write
+
+jobs:
+  staticAnalysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 3600
+      - name: Run Static Analysis
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: $PROJECT_NAME
+          buildspec-override: codebuild/ci/static-analysis.yml
+          compute-type-override: BUILD_GENERAL1_MEDIUM
+          image-override: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+  vectorTests:
+    name: Vector Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distribution: [ openjdk, corretto ]
+        version: [ 8, 11 ]
+        image: [ "aws/codebuild/standard:3.0", "aws/codebuild/amazonlinux2-x86_64-standard:3.0" ]
+        exclude:
+          - distribution: corretto
+            image: aws/codebuild/standard:3.0 # Corretto only runs on AL2
+          - distribution: openjdk
+            image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 3600
+      - name: Vector Tests ${{ matrix.distribution }}${{ matrix.version }}
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: $PROJECT_NAME
+          buildspec-override: codebuild/ci/vectors-ci.yml
+          compute-type-override: BUILD_GENERAL1_LARGE
+          image-override: ${{ matrix.image }}
+          env-vars-for-codebuild: JAVA_ENV_VERSION
+        env:
+          JAVA_ENV_VERSION: ${{ matrix.distribution }}${{ matrix.version }}
+  releaseCI:
+    name: Release CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 3600
+      - name: Release CI
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: $PROJECT_NAME
+          buildspec-override: codebuild/ci/release-ci.yml
+          compute-type-override: BUILD_GENERAL1_LARGE
+          image-override: aws/codebuild/standard:3.0
+  validateCI:
+    name: Validate CI
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distribution: [ openjdk, corretto ]
+        version: [ 8, 11 ]
+        image: [ "aws/codebuild/standard:3.0", "aws/codebuild/amazonlinux2-x86_64-standard:3.0" ]
+        exclude:
+          - distribution: corretto
+            image: aws/codebuild/standard:3.0 # Corretto only runs on AL2
+          - distribution: openjdk
+            image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.CI_AWS_ROLE_ARN }}
+          aws-region: us-west-2
+          role-duration-seconds: 3600
+      - name: Validate CI ${{ matrix.distribution }}${{ matrix.version }}
+        uses: aws-actions/aws-codebuild-run-build@v1
+        timeout-minutes: 60
+        with:
+          project-name: $PROJECT_NAME
+          buildspec-override: codebuild/ci/vectors-ci.yml
+          compute-type-override: BUILD_GENERAL1_MEDIUM
+          image-override: ${{ matrix.image }}
+          env-vars-for-codebuild: |
+            JAVA_ENV_VERSION,
+            JAVA_NUMERIC_VERSION
+        env:
+          JAVA_ENV_VERSION: ${{ matrix.distribution }}${{ matrix.version }}
+          JAVA_NUMERIC_VERSION: ${{ matrix.version }}

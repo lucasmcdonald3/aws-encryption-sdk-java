@@ -44,16 +44,10 @@ Resources:
         BuildSpec: codebuild/ci/ci.yml
         GitCloneDepth: 1
         GitSubmodulesConfig:
-          FetchSubmodules: false
+          FetchSubmodules: true
         InsecureSsl: false
         ReportBuildStatus: false
         Type: GITHUB
-      Triggers:
-        BuildType: BUILD_BATCH
-        Webhook: true
-        FilterGroups:
-          - - Type: EVENT
-              Pattern: PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_REOPENED
       Artifacts:
         Type: NO_ARTIFACTS
       Cache:
@@ -137,6 +131,7 @@ Resources:
       RoleName: !Sub "codebuild-${ProjectName}-service-role-ci"
       AssumeRolePolicyDocument: >-
         {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"codebuild.amazonaws.com"},"Action":"sts:AssumeRole"}]}
+        {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"codebuild.amazonaws.com"},"Action":"sts:AssumeRole"},{"Effect":"Allow","Principal":{"Federated":"arn:aws:iam::587316601012:oidc-provider/token.actions.githubusercontent.com"},"Action":"sts:AssumeRoleWithWebIdentity","Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com"},"StringLike":{"token.actions.githubusercontent.com:sub":"repo:aws/aws-encryption-sdk-java:*"}}}]}
       MaxSessionDuration: 3600
       ManagedPolicyArns:
         - !Ref CryptoToolsKMS
@@ -184,7 +179,8 @@ Resources:
               "Action": [
                 "codebuild:StartBuild",
                 "codebuild:StopBuild",
-                "codebuild:RetryBuild"
+                "codebuild:RetryBuild",
+                "codebuild:BatchGetBuilds"
               ]
             }
           ]
@@ -212,7 +208,8 @@ Resources:
               "Action": [
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
-                "logs:PutLogEvents"
+                "logs:PutLogEvents",
+                "logs:GetLogEvents"
               ]
             },
             {
