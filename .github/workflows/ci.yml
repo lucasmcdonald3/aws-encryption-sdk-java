@@ -104,7 +104,7 @@ jobs:
         timeout-minutes: 60
         with:
           project-name: $PROJECT_NAME
-          buildspec-override: codebuild/ci/vectors-ci.yml
+          buildspec-override: codebuild/ci/validate-ci.yml
           compute-type-override: BUILD_GENERAL1_MEDIUM
           image-override: ${{ matrix.image }}
           env-vars-for-codebuild: |
