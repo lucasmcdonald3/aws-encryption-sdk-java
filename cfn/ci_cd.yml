@@ -181,9 +181,11 @@ Resources:
               ],
               "Action": [
                 "codebuild:StartBuild",
+                "codebuild:StartBuildBatch",
                 "codebuild:StopBuild",
                 "codebuild:RetryBuild",
-                "codebuild:BatchGetBuilds"
+                "codebuild:BatchGetBuilds",
+                "codebuild:BatchGetBuildBatches"
               ]
             }
           ]
