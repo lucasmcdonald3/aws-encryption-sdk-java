@@ -13,7 +13,7 @@ jobs:
   runCodeBuildCI:
     name: Run CodeBuild CI
     environment: ci
-    env:":
+    env:
       ci_aws_role_arn: ${{ secrets.CI_AWS_ROLE_ARN }}
     runs-on: ubuntu-latest
     steps:
