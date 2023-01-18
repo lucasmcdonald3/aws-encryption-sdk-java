@@ -14,13 +14,13 @@ jobs:
     name: Run CodeBuild CI
     environment: ci
     env:
-      ci_aws_role_arn: ${{ secrets.CI_AWS_ROLE_ARN }}
+      CI_AWS_ROLE_ARN: ${{ secrets.CI_AWS_ROLE_ARN }}
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: $ci_aws_role_arn
+          role-to-assume: ${{ env.CI_AWS_ROLE_ARN }}
           aws-region: us-west-2
           role-duration-seconds: 3600
       - name: Checkout
